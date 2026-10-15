@@ -32,6 +32,7 @@ final class CalibrationViewModel {
     private var smoothedPreviewY = 0.0
     private var pendingPreviewTarget: CalibrationTarget?
     private var pendingPreviewTargetCount = 0
+    private var previewSupportsDiagonals = false
 
     let captureStartDelay: TimeInterval = 0.5
     let captureEndDelayBeforeDone: TimeInterval = 0.2
@@ -167,6 +168,7 @@ final class CalibrationViewModel {
         smoothedPreviewY = 0
         pendingPreviewTarget = nil
         pendingPreviewTargetCount = 0
+        previewSupportsDiagonals = false
         previewX = 0
         previewY = 0
         previewTarget = .center
@@ -203,6 +205,14 @@ final class CalibrationViewModel {
             }
 
             let mapper = CalibrationPreviewMapper(profile: profile)
+            previewSupportsDiagonals = profile.captures.contains {
+                switch $0.target {
+                case .upperLeft, .upperRight, .lowerLeft, .lowerRight:
+                    true
+                default:
+                    false
+                }
+            }
 
             do {
                 let stream = try await previewService.startPreviewStream()
@@ -242,6 +252,12 @@ final class CalibrationViewModel {
         case (false, true):
             return y < 0 ? .up : .down
         case (true, true):
+            guard previewSupportsDiagonals else {
+                return abs(x) >= abs(y)
+                    ? (x < 0 ? .left : .right)
+                    : (y < 0 ? .up : .down)
+            }
+
             switch (x < 0, y < 0) {
             case (true, true): return .upperLeft
             case (false, true): return .upperRight

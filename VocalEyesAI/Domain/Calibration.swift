@@ -66,7 +66,9 @@ struct CalibrationPlan: Sendable {
     static let testing = CalibrationPlan(steps: [
         .center,
         .up, .up,
-        .down, .down
+        .down, .down,
+        .left, .left,
+        .right, .right
     ])
 }
 
